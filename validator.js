@@ -371,7 +371,7 @@
   //    before: {Function}, // 表单检验之前
   //    after: {Function}, // 表单校验之后，只有返回 True 表单才可能被提交
   //  }
-  $.fn.validator = function (_options) {
+  $.fn.validator = function (_options, ptns) {
     var $form = this
       , options = _options || {}
       , identifie = options.identifie || '[required]'
@@ -382,6 +382,8 @@
       , after = options.after || function() {return true;}
       , errorCallback = options.errorCallback || function(){}
       , $items = fields(identifie, $form)
+    
+    patterns = $.extend(patterns, ptns)
 
     // 防止浏览器默认校验
     novalidate($form)
