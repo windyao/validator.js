@@ -204,7 +204,7 @@
 
     pattern = $item.attr('pattern')
     pattern && pattern.replace('\\', '\\\\')
-    type = $item.attr('type') || 'text'
+    type = $item.attr('data-type') || $item.attr('type') || 'text'
     // hack ie: 像 select 和 textarea 返回的 type 都为 NODENAME 而非空
     type = patterns[type] ? type : 'text'
     val = $.trim(getVal($item))
@@ -382,7 +382,7 @@
       , after = options.after || function() {return true;}
       , errorCallback = options.errorCallback || function(){}
       , $items = fields(identifie, $form)
-    
+
     patterns = $.extend(patterns, ptns)
 
     // 防止浏览器默认校验
