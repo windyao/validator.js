@@ -7,7 +7,7 @@
 
   var patterns, fields, errorElement, addErrorClass, removeErrorClass, novalidate, validateForm
     , validate, validateFields, removeFromUnvalidFields, asyncValidate, getVal
-    , aorbValidate, validateReturn, unvalidFields = []
+    , aorbValidate, validateReturn, unvalidFields = [], frontValidation, messages
 
   // 类型判断
   patterns = {
@@ -156,7 +156,7 @@
   // 异步验证
   asyncValidate = function ($item, klass, isErrorOnParent) {
     var data = $item.data()
-      , url = data.url
+      , url = data.remote // 与联动选单冲突了，换掉
       , method = data.method || 'get'
       , key = data.key || 'key'
       , text = getVal($item)
@@ -165,7 +165,9 @@
     params[key] = text
 
     $[method](url, params).success(function (isValidate) {
-      var message = isValidate ? 'IM VALIDED' : 'unvalid'
+      var message = isValidate.errno === 0 ? 'IM VALIDED' : 'unvalid'
+      var type = $item.attr('data-type') || $item.attr('type') || 'text'
+      messages[type] = isValidate.data.message
       return validateReturn.call(this, $item, klass, isErrorOnParent, message)
     }).error(function(){
         // 异步错误，供调试用，理论上线上不应该继续运行
@@ -253,7 +255,7 @@
     type = $item.attr('type')
     val = getVal($item)
 
-    async = $item.data('url')
+    async = $item.data('remote')
     aorb = $item.data('aorb')
     event = $item.data('event')
 
@@ -277,7 +279,12 @@
 
     // 异步验证则不进行普通验证
     if (async) {
-      return asyncValidate.apply(this, commonArgs)
+      frontValidation = validateReturn.call(this, $item, klass, parent)
+      if (frontValidation === false) {
+          // 前端校验已经通过
+          return asyncValidate.apply(this, commonArgs)
+      }
+      // return asyncValidate.apply(this, commonArgs)
     }
 
     // 正常验证返回值
@@ -371,7 +378,7 @@
   //    before: {Function}, // 表单检验之前
   //    after: {Function}, // 表单校验之后，只有返回 True 表单才可能被提交
   //  }
-  $.fn.validator = function (_options, ptns) {
+  $.fn.validator = function (_options, ptns, msgs) {
     var $form = this
       , options = _options || {}
       , identifie = options.identifie || '[required]'
@@ -384,7 +391,7 @@
       , $items = fields(identifie, $form)
 
     patterns = $.extend(patterns, ptns)
-
+    messages = msgs
     // 防止浏览器默认校验
     novalidate($form)
 
